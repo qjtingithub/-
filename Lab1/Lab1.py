@@ -65,18 +65,21 @@ class Graph:
                 if next_word not in G_word_depth:
                     G_word_depth[next_word] = G_word_depth[word] + 1 
                     G_word_order[next_word] = 0
-                if not G.has_edge(word, next_word):
+                if word not in self.G[next_word]:
                     G.add_edge(word, next_word, weight = weight)
+                else:
+                    G.add_edge(word, next_word, weight = weight + self.G[next_word][word])
         # 处理每个节点的位置
         max_depth = max(G_word_depth.values())
         for depth in range(1, max_depth + 1):
             total = sum(1 for w in G_word_depth if G_word_depth[w] == depth)
-            order = 10.0/(total + 1)
+            step = 10.0/(total + 1)
+            order = step
             for word in G_word_depth:
-                random_step = random.random()
+                random_step = random.random() * (order/2)
                 if G_word_depth[word] == depth:
                     G_word_order[word] = order
-                    order += (order + random_step)
+                    order += (step + random_step)
         pos = {}
         for word, depth in G_word_depth.items():
             pos[word] = (G_word_order[word], max_depth - depth)
@@ -178,7 +181,9 @@ class Graph:
                 break
 
             if msvcrt.kbhit():
-                print("随机游走中止！")
+                Key = msvcrt.getch()
+                if Key == ' ':
+                    print("随机游走中止！")
                 break
         
         print("随机游走结果为：" + " -> ".join(path))
@@ -224,7 +229,7 @@ def main():
         current_word = words[i]
         next_word = words[i + 1]
         # 解决最后一个单词的节点问题
-        if i == len(words) - 2:
+        if i == len(words) - 2 and next_word not in instance.G:
             instance.G[next_word] = {}
         if current_word not in instance.G:
             instance.G[current_word] = {}
@@ -233,7 +238,7 @@ def main():
         else:
             instance.G[current_word][next_word] = 1
         i += 1
-    # print(instance.G)
+    print(instance.G)
     while 1:
         func_num = input("展示图请输入1，查询桥接词请输入2，根据bridge words生成新的文本请输入3，计算两个单词间最短路径请输入4，随机游走请输入5：,退出请输入6：")
         if func_num == '1':
@@ -243,7 +248,7 @@ def main():
                 input_str = input("请输入两个英文单词:")
                 words = input_str.split()
                 if len(words) != 2:
-                    print("请输入两个单词，以空格作为间隔：")
+                    print("请输入两个单词并以空格作为间隔!")
                 else:
                     word1, word2 = words
                     break
